@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
     Engine,
     Render,
@@ -9,6 +9,10 @@ import {
     MouseConstraint,
     World,
     Events,
+    Vector,
+    IMouseEvent,
+    Query,
+    IEventCollision,
 } from "matter-js";
 import styled from "@emotion/styled";
 
@@ -47,88 +51,130 @@ const config = {
 };
 
 function App() {
-    const [engine, setEngine] = useState<Engine | null>(null);
-    const [render, setRender] = useState<Render | null>(null);
-    const [runner, setRunner] = useState<Runner | null>(null);
+    const engine = useRef<Engine | null>(null);
+    const render = useRef<Render | null>(null);
+    const runner = useRef<Runner | null>(null);
 
-    function createRunner(engine: Engine) {
-        const runner = Runner.create();
-        setRunner(runner);
+    function createRunner() {
+        if (engine.current) {
+            runner.current = Runner.create();
 
-        Runner.run(runner, engine);
-    }
+            Runner.run(runner.current, engine.current);
 
-    function createRender(engine: Engine, element: HTMLElement) {
-        const { SIZE } = config;
-        const render = Render.create({
-            element,
-            engine,
-            options: {
-                width: SIZE,
-                height: SIZE,
-                wireframes: false,
-            },
-        });
-        setRender(render);
-        Render.run(render);
-
-        createRunner(engine);
-
-        // 마우스 생성
-        const $mouse = Mouse.create(render.canvas);
-        const mouseConstraint = MouseConstraint.create(engine, {
-            mouse: $mouse,
-            constraint: {
-                stiffness: 0.2,
-                render: {
-                    visible: false,
-                },
-            },
-        });
-        World.add(engine.world, mouseConstraint);
-    }
-
-    function init() {
-        if (!engine) {
-            const engine = Engine.create();
-            setEngine(engine);
-
-            createRender(engine, document.getElementById("container")!);
+            handleStart();
         }
     }
+    function createRender(element: HTMLElement) {
+        if (engine.current) {
+            const { SIZE } = config;
+            render.current = Render.create({
+                element,
+                engine: engine.current!,
+                options: {
+                    width: SIZE,
+                    height: SIZE,
+                    wireframes: false,
+                    background: "transparent",
+                },
+            });
+            Render.run(render.current);
 
-    function drawNumbersOnBoxes() {
-        const context = render!.context;
+            createRunner();
 
-        Composite.allBodies(engine!.world).forEach((body) => {
-            if (body.label && body.label.length === 1) {
-                // 숫자인지 확인
-                const position = body.position;
-                context.font = "20px Arial";
-                context.fillStyle = "#333";
-                context.textAlign = "center";
-                context.textBaseline = "middle";
-                context.fillText(body.label, position.x, position.y + 1);
-            }
-        });
+            // 마우스 생성
+            const $mouse = Mouse.create(render.current.canvas);
+            const mouseConstraint = MouseConstraint.create(engine.current, {
+                mouse: $mouse,
+                constraint: {
+                    stiffness: 0.2,
+                    render: {
+                        visible: false,
+                    },
+                },
+            });
+
+            World.add(engine.current.world, mouseConstraint);
+            Events.on(mouseConstraint, "mousedown", handleBoxClick);
+        }
+    }
+    function init() {
+        if (!engine.current) {
+            engine.current = Engine.create();
+
+            createRender(document.getElementById("container")!);
+        }
     }
 
     useEffect(() => {
         init();
 
         return () => {
-            if (engine) {
-                Engine.clear(engine);
+            if (engine.current) {
+                Engine.clear(engine.current);
             }
         };
     }, []);
 
-    function handleStart() {
-        Events.on(render, "afterRender", drawNumbersOnBoxes);
+    // Box에 숫자 그리기
+    function drawNumbersOnBoxes() {
+        if (engine.current && render.current) {
+            const context = render.current.context;
+
+            Composite.allBodies(engine.current.world).forEach((body) => {
+                if (body.label && body.label.length === 1) {
+                    // 숫자인지 확인
+                    const position = body.position;
+                    context.font = "20px Arial";
+                    context.fillStyle = "rgb(182, 182, 182)";
+                    context.textAlign = "center";
+                    context.textBaseline = "middle";
+                    context.fillText(body.label, position.x, position.y + 1);
+                }
+            });
+        }
+    }
+    // Box 클릭 했을 때 숫자 드롭
+    function dropNumber(number: string, position: Vector) {
+        const { BOX_SIZE } = config;
+
+        const fallingBox = Bodies.rectangle(
+            position.x,
+            position.y + BOX_SIZE * 2, // 박스 바로 아래에 생성
+            BOX_SIZE,
+            BOX_SIZE,
+            {
+                render: {
+                    fillStyle: "transparent",
+                },
+                label: number,
+            },
+        );
+
+        World.add(engine.current?.world!, fallingBox);
+    }
+    // Box Click EventListener
+    function handleBoxClick(event: any) {
+        const mousePosition = event.mouse.position;
+        const bodiesUnderCursor = Query.point(
+            Composite.allBodies(engine.current?.world!),
+            mousePosition,
+        );
+
+        bodiesUnderCursor.forEach((body) => {
+            if (body.label && body.label.length === 1) {
+                // 숫자인지 확인
+                dropNumber(body.label, body.position);
+            }
+        });
+    }
+    // Box 생성
+    function addBoxes() {
+        Events.on(render.current, "afterRender", drawNumbersOnBoxes);
+
         const { SIZE, BOX_SIZE, BOX_GAP } = config;
         let startX = (SIZE - (BOX_SIZE * 10 + BOX_GAP * 9)) / 2;
 
-        const numberBoxs = [];
+        const numberBoxes = [];
 
         for (let i = 0; i < 10; i++) {
             const numberBox = Bodies.rectangle(
@@ -139,7 +185,7 @@ function App() {
                 {
                     isStatic: true,
                     render: {
-                        fillStyle: "#bbb",
+                        fillStyle: "rgb(235, 235, 235)",
                         strokeStyle: "transparent",
                     },
                     label: i.toString(),
@@ -148,15 +194,19 @@ function App() {
 
             startX += BOX_SIZE + BOX_GAP;
 
-            numberBoxs.push(numberBox);
+            numberBoxes.push(numberBox);
         }
 
-        Composite.add(engine!.world, numberBoxs);
+        Composite.add(engine.current?.world!, numberBoxes);
+    }
+
+    function handleStart() {
+        addBoxes();
     }
 
     return (
         <ContainerStyled id="container">
-            <h3 onClick={handleStart}>휴대폰번호를 입력해주세요.</h3>
+            <h3>휴대폰번호를 입력해주세요.</h3>
 
             {/* <NavigationStyled>
                 {Array.from({ length: 10 }, (_, index) => index).map(
