@@ -10,9 +10,7 @@ import {
     World,
     Events,
     Vector,
-    IMouseEvent,
     Query,
-    IEventCollision,
 } from "matter-js";
 import styled from "@emotion/styled";
 
@@ -48,6 +46,7 @@ const config = {
     SIZE: 500,
     BOX_SIZE: 30,
     BOX_GAP: 10,
+    DIAMOND_SIZE: 50,
 };
 
 function App() {
@@ -140,9 +139,10 @@ function App() {
         const fallingBox = Bodies.rectangle(
             position.x,
             position.y + BOX_SIZE * 2, // 박스 바로 아래에 생성
-            BOX_SIZE,
-            BOX_SIZE,
+            8,
+            20,
             {
+                friction: 0.001,
                 render: {
                     fillStyle: "transparent",
                 },
@@ -172,7 +172,7 @@ function App() {
         Events.on(render.current, "afterRender", drawNumbersOnBoxes);
 
         const { SIZE, BOX_SIZE, BOX_GAP } = config;
-        let startX = (SIZE - (BOX_SIZE * 10 + BOX_GAP * 9)) / 2;
+        let startX = (SIZE - (BOX_SIZE * 10 + BOX_GAP * 9)) / 2 + BOX_SIZE / 2;
 
         const numberBoxes = [];
 
@@ -200,8 +200,72 @@ function App() {
         Composite.add(engine.current?.world!, numberBoxes);
     }
 
+    function addDiamonds() {
+        const { SIZE, DIAMOND_SIZE } = config;
+        const BIG_DIAMOND_SIZE = DIAMOND_SIZE * 2;
+
+        const left = Bodies.fromVertices(
+            125,
+            125,
+            [
+                [
+                    { x: DIAMOND_SIZE, y: 0 },
+                    { x: 0, y: DIAMOND_SIZE / 2 },
+                    { x: DIAMOND_SIZE, y: DIAMOND_SIZE },
+                    { x: DIAMOND_SIZE * 2, y: DIAMOND_SIZE / 2 },
+                ],
+            ],
+            {
+                isStatic: true,
+                render: {
+                    fillStyle: "rgb(235, 235, 235)",
+                },
+            },
+        );
+
+        const center = Bodies.fromVertices(
+            SIZE / 2,
+            200,
+            [
+                [
+                    { x: BIG_DIAMOND_SIZE, y: 0 },
+                    { x: 0, y: BIG_DIAMOND_SIZE / 2 },
+                    { x: BIG_DIAMOND_SIZE, y: BIG_DIAMOND_SIZE },
+                    { x: BIG_DIAMOND_SIZE * 2, y: BIG_DIAMOND_SIZE / 2 },
+                ],
+            ],
+            {
+                isStatic: true,
+                render: {
+                    fillStyle: "rgb(235, 235, 235)",
+                },
+            },
+        );
+        const right = Bodies.fromVertices(
+            SIZE - 125,
+            125,
+            [
+                [
+                    { x: DIAMOND_SIZE, y: 0 },
+                    { x: 0, y: DIAMOND_SIZE / 2 },
+                    { x: DIAMOND_SIZE, y: DIAMOND_SIZE },
+                    { x: DIAMOND_SIZE * 2, y: DIAMOND_SIZE / 2 },
+                ],
+            ],
+            {
+                isStatic: true,
+                render: {
+                    fillStyle: "rgb(235, 235, 235)",
+                },
+            },
+        );
+
+        World.add(engine.current?.world!, [left, center, right]);
+    }
+
     function handleStart() {
         addBoxes();
+        addDiamonds();
     }
 
     return (
