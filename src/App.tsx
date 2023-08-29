@@ -123,11 +123,17 @@ function App() {
                 if (body.label && body.label.length === 1) {
                     // 숫자인지 확인
                     const position = body.position;
+                    context.save(); // 현재의 캔버스 상태를 저장
+                    context.translate(position.x, position.y); // 원의 중심으로 이동
+                    context.rotate(body.angle); // 원이 회전한 각도로 캔버스 회전
+
                     context.font = "20px Arial";
                     context.fillStyle = "rgb(182, 182, 182)";
                     context.textAlign = "center";
                     context.textBaseline = "middle";
-                    context.fillText(body.label, position.x, position.y + 1);
+                    context.fillText(body.label, 0, 0); // 이제 원의 중심이 (0, 0)
+
+                    context.restore(); // 캔버스 상태를 복원
                 }
             });
         }
@@ -136,11 +142,10 @@ function App() {
     function dropNumber(number: string, position: Vector) {
         const { BOX_SIZE } = config;
 
-        const fallingBox = Bodies.rectangle(
+        const fallingBox = Bodies.circle(
             position.x,
             position.y + BOX_SIZE * 2, // 박스 바로 아래에 생성
             8,
-            20,
             {
                 friction: 0.001,
                 render: {
