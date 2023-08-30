@@ -48,6 +48,8 @@ const config = {
     BOX_SIZE: 30,
     BOX_GAP: 10,
     DIAMOND_SIZE: 50,
+    INPUT_SIZE: 20,
+    INPUT_GAP: 5,
 };
 
 function App() {
@@ -55,20 +57,7 @@ function App() {
     const render = useRef<Render | null>(null);
     const runner = useRef<Runner | null>(null);
 
-    const inputBox = useRef<Body>(
-        Bodies.rectangle(
-            config.SIZE / 2,
-            500,
-            config.BOX_SIZE,
-            config.BOX_SIZE,
-            {
-                isStatic: true,
-                render: {
-                    fillStyle: "rgb(182, 182, 182)",
-                },
-            },
-        ),
-    );
+    const inputs = useRef<Body[]>([]);
     const moveRight = useRef(true);
 
     function createRunner() {
@@ -319,42 +308,82 @@ function App() {
         ]);
     }
     // input 생성
-    function addInput() {
-        World.add(engine.current?.world!, [inputBox.current]);
+    function addInputs() {
+        const { SIZE, INPUT_SIZE, INPUT_GAP } = config;
+        let startX =
+            (SIZE - (INPUT_SIZE * 11 + INPUT_GAP * 10)) / 2 + INPUT_SIZE / 2;
+
+        for (let i = 0; i < 11; i++) {
+            const input = Bodies.rectangle(
+                startX,
+                SIZE,
+                INPUT_SIZE,
+                INPUT_SIZE,
+                {
+                    isStatic: true,
+                    render: {
+                        fillStyle: "rgb(182, 182, 182)",
+                        strokeStyle: "transparent",
+                    },
+                    label: `input-${i}`,
+                },
+            );
+
+            startX += INPUT_SIZE + INPUT_GAP;
+
+            inputs.current.push(input);
+        }
+
+        World.add(engine.current?.world!, inputs.current);
 
         // Input 움직임
         Events.on(engine.current!, "afterUpdate", function () {
-            const { BOX_SIZE, SIZE } = config;
-            if (
-                inputBox.current.position.x > SIZE - BOX_SIZE &&
-                moveRight.current
-            ) {
+            const { INPUT_SIZE, SIZE } = config;
+
+            const inputsLength = inputs.current.length;
+            const [firstInput, endInput] = [
+                inputs.current[0],
+                inputs.current[inputsLength - 1],
+            ];
+
+            // 오른쪽 끝인지
+            if (endInput.position.x > SIZE - INPUT_SIZE && moveRight.current) {
                 moveRight.current = false;
             } else if (
-                inputBox.current.position.x - BOX_SIZE < 0 &&
+                firstInput.position.x - INPUT_SIZE < 0 &&
                 !moveRight.current
             ) {
                 moveRight.current = true;
             }
 
-            Body.translate(inputBox.current, {
-                x: moveRight.current ? 2 : -2,
-                y: 0,
-            });
+            const x = moveRight.current ? 2 : -2;
+            for (let i = 0; i < inputsLength; i++) {
+                Body.translate(inputs.current[i], {
+                    x,
+                    y: 0,
+                });
+            }
         });
 
+        // Input 충돌 감지
         Events.on(engine.current!, "collisionStart", function (event) {
             const { pairs } = event;
 
-            for (let i = 0; i < pairs.length; i++) {
-                const { bodyA, bodyB } = pairs[i];
+            // for (let i = 0; i < pairs.length; i++) {
+            //     const { bodyA, bodyB } = pairs[i];
 
-                if (bodyA === inputBox.current) {
-                    console.log(bodyB.label);
-                } else if (bodyB === inputBox.current) {
-                    console.log(bodyB.label);
-                }
-            }
+            //     let isCrash = false;
+
+            //     if (bodyA === inputBox.current || bodyB === inputBox.current) {
+            //         isCrash = true;
+            //     }
+
+            //     if (isCrash) {
+            //         inputBox.current.collisionFilter.mask = 0x000;
+
+            //         Body.update(inputBox.current, 1, 1, 1);
+            //     }
+            // }
         });
     }
 
@@ -362,7 +391,7 @@ function App() {
         addBoxes();
         addDiamonds();
         addWall();
-        addInput();
+        addInputs();
     }
 
     return (
