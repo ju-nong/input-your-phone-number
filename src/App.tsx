@@ -30,7 +30,7 @@ const ContainerStyled = styled.div`
 `;
 
 const config = {
-    SIZE: 500,
+    SIZE: 600,
     BOX_SIZE: 30,
     BOX_GAP: 10,
     DIAMOND_SIZE: 50,
@@ -83,9 +83,21 @@ function App() {
                     },
                 },
             });
-
             World.add(engine.current.world, mouseConstraint);
+
+            // 마우스 클릭
             Events.on(mouseConstraint, "mousedown", handleBoxClick);
+            // Events.on(mouseConstraint, "mousemove", function (event) {
+            //     const mousePosition = event.source.mouse.position;
+            //     const bodiesUnderCursor = Query.point(
+            //         Composite.allBodies(engine.current?.world!),
+            //         mousePosition,
+            //     );
+
+            //     bodiesUnderCursor.forEach((body) => {
+            //         console.log(body.label);
+            //     });
+            // });
         }
     }
     function init() {
@@ -158,7 +170,7 @@ function App() {
         );
 
         bodiesUnderCursor.forEach((body) => {
-            if (body.label && body.label.length === 1) {
+            if (!body.circleRadius && body.label && body.label.length === 1) {
                 // 숫자인지 확인
                 dropNumber(body.label, body.position);
             }
