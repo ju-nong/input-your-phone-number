@@ -11,6 +11,7 @@ import {
     Events,
     Vector,
     Query,
+    Body,
 } from "matter-js";
 import styled from "@emotion/styled";
 
@@ -54,6 +55,22 @@ function App() {
     const render = useRef<Render | null>(null);
     const runner = useRef<Runner | null>(null);
 
+    const inputBox = useRef<Body>(
+        Bodies.rectangle(
+            config.SIZE / 2,
+            500,
+            config.BOX_SIZE,
+            config.BOX_SIZE,
+            {
+                isStatic: true,
+                render: {
+                    fillStyle: "rgb(182, 182, 182)",
+                },
+            },
+        ),
+    );
+    const moveRight = useRef(true);
+
     function createRunner() {
         if (engine.current) {
             runner.current = Runner.create();
@@ -71,7 +88,7 @@ function App() {
                 engine: engine.current!,
                 options: {
                     width: SIZE,
-                    height: SIZE,
+                    height: SIZE + 200,
                     wireframes: false,
                     background: "transparent",
                 },
@@ -147,7 +164,7 @@ function App() {
             position.y + BOX_SIZE * 2, // 박스 바로 아래에 생성
             8,
             {
-                friction: 0.001,
+                friction: 0.5,
                 render: {
                     fillStyle: "transparent",
                 },
@@ -204,7 +221,7 @@ function App() {
 
         Composite.add(engine.current?.world!, numberBoxes);
     }
-
+    // Diamond 생성
     function addDiamonds() {
         const { SIZE, DIAMOND_SIZE } = config;
         const BIG_DIAMOND_SIZE = DIAMOND_SIZE * 2;
@@ -267,10 +284,70 @@ function App() {
 
         World.add(engine.current?.world!, [left, center, right]);
     }
+    // Wall 생성
+    function addWall() {
+        const { SIZE } = config;
+        const options = {
+            isStatic: true,
+            render: {
+                fillStyle: "rgb(182, 182, 182)",
+                strokeStyle: "transparent",
+            },
+        };
+
+        const leftTop = Bodies.rectangle(2, 125, 4, 125, options);
+        const leftMiddle = Bodies.rectangle(100, 250, 4, 250, {
+            ...options,
+            angle: -45,
+        });
+        const leftBottom = Bodies.rectangle(205, 365, 4, 100, options);
+
+        const rightTop = Bodies.rectangle(SIZE - 2, 125, 4, 125, options);
+        const rightMiddle = Bodies.rectangle(SIZE - 100, 250, 4, 250, {
+            ...options,
+            angle: 45,
+        });
+        const rightBottom = Bodies.rectangle(SIZE - 205, 365, 4, 100, options);
+
+        World.add(engine.current?.world!, [
+            leftTop,
+            leftMiddle,
+            leftBottom,
+            rightTop,
+            rightMiddle,
+            rightBottom,
+        ]);
+    }
+    // input 생성
+    function addInput() {
+        World.add(engine.current?.world!, [inputBox.current]);
+
+        Events.on(engine.current!, "afterUpdate", function () {
+            const { BOX_SIZE, SIZE } = config;
+            if (
+                inputBox.current.position.x > SIZE - BOX_SIZE &&
+                moveRight.current
+            ) {
+                moveRight.current = false;
+            } else if (
+                inputBox.current.position.x - BOX_SIZE < 0 &&
+                !moveRight.current
+            ) {
+                moveRight.current = true;
+            }
+
+            Body.translate(inputBox.current, {
+                x: moveRight.current ? 2 : -2,
+                y: 0,
+            });
+        });
+    }
 
     function handleStart() {
         addBoxes();
         addDiamonds();
+        addWall();
+        addInput();
     }
 
     return (
