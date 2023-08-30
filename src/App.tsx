@@ -22,7 +22,7 @@ const ContainerStyled = styled.div`
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    row-gap: 2rem;
+    row-gap: 0.5rem;
 
     > h3 {
         color: #bbb;
@@ -63,7 +63,7 @@ function App() {
                 engine: engine.current!,
                 options: {
                     width: SIZE,
-                    height: SIZE + 200,
+                    height: SIZE + 100,
                     wireframes: false,
                     background: "transparent",
                 },
