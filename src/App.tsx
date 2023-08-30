@@ -420,7 +420,7 @@ function App() {
 
     return (
         <ContainerStyled id="container">
-            <h3>휴대폰번호를 입력해주세요.</h3>
+            <h3>전화번호를 입력해보세요.</h3>
 
             {/* <NavigationStyled>
                 {Array.from({ length: 10 }, (_, index) => index).map(
