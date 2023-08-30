@@ -322,6 +322,7 @@ function App() {
     function addInput() {
         World.add(engine.current?.world!, [inputBox.current]);
 
+        // Input 움직임
         Events.on(engine.current!, "afterUpdate", function () {
             const { BOX_SIZE, SIZE } = config;
             if (
@@ -340,6 +341,20 @@ function App() {
                 x: moveRight.current ? 2 : -2,
                 y: 0,
             });
+        });
+
+        Events.on(engine.current!, "collisionStart", function (event) {
+            const { pairs } = event;
+
+            for (let i = 0; i < pairs.length; i++) {
+                const { bodyA, bodyB } = pairs[i];
+
+                if (bodyA === inputBox.current) {
+                    console.log(bodyB.label);
+                } else if (bodyB === inputBox.current) {
+                    console.log(bodyB.label);
+                }
+            }
         });
     }
 
