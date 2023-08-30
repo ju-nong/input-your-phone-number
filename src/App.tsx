@@ -379,6 +379,7 @@ function App() {
                 }
 
                 let [clashInput, clashNumber] = ["", ""];
+                let removeNumber: null | Body = null;
 
                 if (labelA.includes("input")) {
                     clashInput = labelA.split("-")[1];
@@ -388,8 +389,10 @@ function App() {
 
                 if (labelA.length === 1) {
                     clashNumber = labelA;
+                    removeNumber = bodyA;
                 } else if (labelB.length === 1) {
                     clashNumber = labelB;
+                    removeNumber = bodyB;
                 }
 
                 if (clashInput.length && clashNumber.length) {
@@ -397,6 +400,7 @@ function App() {
                     clashInputTarget.collisionFilter.mask = 0x000;
                     clashInputTarget.label = clashNumber;
 
+                    World.remove(engine.current?.world!, removeNumber!);
                     Body.update(clashInputTarget, 1, 1, 1);
                 }
             }
