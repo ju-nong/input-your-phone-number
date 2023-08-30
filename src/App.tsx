@@ -313,10 +313,28 @@ function App() {
         let startX =
             (SIZE - (INPUT_SIZE * 11 + INPUT_GAP * 10)) / 2 + INPUT_SIZE / 2;
 
-        for (let i = 0; i < 11; i++) {
+        for (let i = 0; i < 13; i++) {
+            if (i === 3 || i === 7) {
+                const dash = Bodies.rectangle(startX, SIZE + 50, 10, 3, {
+                    isStatic: true,
+                    render: {
+                        fillStyle: "rgb(182, 182, 182)",
+                        strokeStyle: "transparent",
+                    },
+                    collisionFilter: {
+                        mask: 0x000,
+                    },
+                });
+                startX += INPUT_SIZE + INPUT_GAP;
+
+                inputs.current.push(dash);
+
+                continue;
+            }
+
             const input = Bodies.rectangle(
                 startX,
-                SIZE,
+                SIZE + 50,
                 INPUT_SIZE,
                 INPUT_SIZE,
                 {
