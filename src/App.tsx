@@ -134,7 +134,7 @@ function App() {
                     context.rotate(body.angle); // 원이 회전한 각도로 캔버스 회전
 
                     context.font = "20px Arial";
-                    context.fillStyle = "rgb(182, 182, 182)";
+                    context.fillStyle = "rgb(76, 69, 69)";
                     context.textAlign = "center";
                     context.textBaseline = "middle";
                     context.fillText(body.label, 0, 0); // 이제 원의 중심이 (0, 0)
@@ -369,21 +369,37 @@ function App() {
         Events.on(engine.current!, "collisionStart", function (event) {
             const { pairs } = event;
 
-            // for (let i = 0; i < pairs.length; i++) {
-            //     const { bodyA, bodyB } = pairs[i];
+            for (let i = 0; i < pairs.length; i++) {
+                const { bodyA, bodyB } = pairs[i];
 
-            //     let isCrash = false;
+                const [labelA, labelB] = [bodyA.label, bodyB.label];
+                if (labelA.length === 1 && labelB.length === 1) {
+                    // 이미 입력된 박스나, 숫자들끼리는 제외
+                    return;
+                }
 
-            //     if (bodyA === inputBox.current || bodyB === inputBox.current) {
-            //         isCrash = true;
-            //     }
+                let [clashInput, clashNumber] = ["", ""];
 
-            //     if (isCrash) {
-            //         inputBox.current.collisionFilter.mask = 0x000;
+                if (labelA.includes("input")) {
+                    clashInput = labelA.split("-")[1];
+                } else if (labelB.includes("input")) {
+                    clashInput = labelB.split("-")[1];
+                }
 
-            //         Body.update(inputBox.current, 1, 1, 1);
-            //     }
-            // }
+                if (labelA.length === 1) {
+                    clashNumber = labelA;
+                } else if (labelB.length === 1) {
+                    clashNumber = labelB;
+                }
+
+                if (clashInput.length && clashNumber.length) {
+                    const clashInputTarget = inputs.current[Number(clashInput)];
+                    clashInputTarget.collisionFilter.mask = 0x000;
+                    clashInputTarget.label = clashNumber;
+
+                    Body.update(clashInputTarget, 1, 1, 1);
+                }
+            }
         });
     }
 
