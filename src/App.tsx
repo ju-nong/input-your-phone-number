@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
     Engine,
     Render,
@@ -26,20 +26,6 @@ const ContainerStyled = styled.div`
 
     > h3 {
         color: #bbb;
-    }
-`;
-
-const NavigationStyled = styled.ul`
-    list-style: none;
-    display: flex;
-    column-gap: 1rem;
-    text-align: center;
-
-    > li {
-        width: 30px;
-        line-height: 30px;
-        cursor: pointer;
-        background-color: #eee;
     }
 `;
 
