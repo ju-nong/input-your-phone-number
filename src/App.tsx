@@ -139,7 +139,7 @@ function App() {
             position.y + BOX_SIZE * 2, // 박스 바로 아래에 생성
             8,
             {
-                friction: 0.8,
+                friction: 1,
                 render: {
                     fillStyle: "transparent",
                 },
