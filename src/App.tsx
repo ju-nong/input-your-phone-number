@@ -312,7 +312,7 @@ function App() {
             (SIZE - (INPUT_SIZE * 11 + INPUT_GAP * 10)) / 2 + INPUT_SIZE / 2;
 
         for (let i = 0; i < 13; i++) {
-            if (i === 3 || i === 7) {
+            if (i === 3 || i === 8) {
                 const dash = Bodies.rectangle(startX, SIZE + 50, 10, 3, {
                     isStatic: true,
                     render: {
